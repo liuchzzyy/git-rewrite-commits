@@ -18,7 +18,6 @@ on:
         type: choice
         options:
           - deepseek
-          - ollama
       model:
         description: 'AI Model (optional)'
         required: false
