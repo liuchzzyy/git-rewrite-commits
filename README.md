@@ -2,8 +2,6 @@
 
 AI-powered git commit message rewriter using OpenAI, DeepSeek, or Ollama.
 
-> 🐍 Python port of [f/git-rewrite-commits](https://github.com/f/git-rewrite-commits) with added DeepSeek support.
-
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -188,7 +186,3 @@ git-rewrite-commits --language ja    # Japanese
 ## License
 
 MIT License - see [LICENSE](LICENSE) file.
-
-## Credits
-
-Python port of [f/git-rewrite-commits](https://github.com/f/git-rewrite-commits) by Fatih Kadir Akın.
