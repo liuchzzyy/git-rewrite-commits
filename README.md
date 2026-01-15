@@ -9,22 +9,25 @@ AI-powered git commit message rewriter using OpenAI, DeepSeek, or Ollama.
 
 Automatically rewrite your entire git commit history with better, conventional commit messages using AI. Perfect for cleaning up messy commit histories before open-sourcing projects or improving repository maintainability.
 
-## Features
+## 🚀 Why git-rewrite-commits?
+
+Messy commit histories like "fix", "update", "wip" make it hard to understand project evolution. This tool uses state-of-the-art AI to analyze your actual code changes and generate meaningful, conventional commit messages that reflect what *really* changed.
+
+## ✨ Features
 
 - **AI-powered commit message generation** using OpenAI, DeepSeek, or local Ollama models
-- **Rewrite entire git history** with better commit messages
-- **Conventional commits** format (feat, fix, chore, etc.)
+- **Blazing fast history rewrite** using native git tree operations (no more slow `filter-branch`)
+- **Conventional commits** format (feat, fix, chore, etc.) strictly enforced
 - **Multi-language support** - generate commits in any language
-- **Smart filtering** - skip already well-formed commits
-- **Local AI option** with Ollama - no data leaves your machine
+- **Smart filtering** - skip already well-formed commits to save API costs
+- **Local AI option** with Ollama - 100% privacy, no data leaves your machine
 - **Git hooks integration** - automatic AI messages on every commit
 - **Intelligent analysis** of code changes to generate meaningful messages
 - **Safe operation** with automatic backup branches
-- **Custom templates** for team-specific formats
 - **Quality scoring** to identify commits that need improvement
 - **Sensitive data redaction** - automatically removes API keys, tokens, passwords from diffs
 
-## Installation
+## 🛠️ Installation
 
 ### From PyPI (Recommended)
 
