@@ -186,3 +186,7 @@ git-rewrite-commits --language ja    # Japanese
 ## License
 
 MIT License - see [LICENSE](LICENSE) file.
+
+## Credits
+
+Python port of [f/git-rewrite-commits](https://github.com/f/git-rewrite-commits) by Fatih Kadir Akın.
