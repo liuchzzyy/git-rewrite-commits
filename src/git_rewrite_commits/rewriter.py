@@ -330,7 +330,7 @@ class GitCommitRewriter:
 
         # Apply
         try:
-            self.repo.rewrite_history(ordered_messages, self.options.max_commits)
+            self.repo.rewrite_history(ordered_messages)
             if not self.options.quiet:
                 self.console.print("\n[bold green]✅ Successfully rewrote git history![/]")
         except Exception as e:
