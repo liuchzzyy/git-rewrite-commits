@@ -7,6 +7,10 @@ on:
         description: 'Number of commits to rewrite (default: all)'
         required: false
         default: ''
+      force_rewrite:
+        description: 'Force rewrite even well-formed commits'
+        type: boolean
+        default: true
       provider:
         description: 'AI Provider'
         required: true
@@ -46,14 +50,8 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: Install git-rewrite-commits
-        run: |
-          pip install .
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
       - name: Configure Git Identity
         run: |
@@ -72,29 +70,32 @@ jobs:
             ARGS="$ARGS --max-commits ${{ inputs.max_commits }}"
           fi
           
+          if [ "${{ inputs.force_rewrite }}" == "true" ]; then
+            ARGS="$ARGS --no-skip-well-formed"
+          fi
+          
           if [ "${{ inputs.model }}" != "" ]; then
             ARGS="$ARGS --model ${{ inputs.model }}"
           fi
           
           LANGUAGE="${{ inputs.language }}"
-          if [ -z "$LANGUAGE" ]; then LANGUAGE="en"; fi
+          if [ -z "$LANGUAGE" ]; then LANGUAGE="zh"; fi
           ARGS="$ARGS --language $LANGUAGE"
           
           PROVIDER="${{ inputs.provider }}"
           if [ -z "$PROVIDER" ]; then PROVIDER="deepseek"; fi
 
-          # For push events, limit scope to prevent deep history rewrites on every push
-          # But user wants "every new submission... rewrite record"
+          # For push events, limit scope and DO NOT force rewrite well-formed commits
           if [ "${{ github.event_name }}" == "push" ]; then
-             # Just rewrite the last 10 commits to cover the pushed batch and ensure consistency
-             # If commits are already well-formed, they will be skipped
              ARGS="$ARGS --max-commits 10"
+             # Remove --no-skip-well-formed if it was somehow added, though logic above separates it
+             # But strictly speaking, push events don't have inputs, so it's safe.
           fi
           
-          echo "Running: git-rewrite-commits --provider $PROVIDER $ARGS"
+          echo "Running: uv run git-rewrite-commits --provider $PROVIDER $ARGS"
           
-          # Run the rewriter
-          git-rewrite-commits --provider $PROVIDER $ARGS
+          # Run the rewriter using uv
+          uv run git-rewrite-commits --provider $PROVIDER $ARGS
           
           # Push changes if any
           LOCAL_HASH=$(git rev-parse HEAD)
