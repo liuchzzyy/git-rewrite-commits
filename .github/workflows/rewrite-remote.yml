@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       target_repo:
-        description: 'Target repository path (e.g., owner/repo)'
+        description: 'Target repository (e.g., owner/repo or https://github.com/owner/repo)'
         required: true
       branch:
         description: 'Target branch to rewrite'
@@ -21,6 +21,9 @@ on:
         options:
           - deepseek
           - openai
+      model:
+        description: 'AI Model (optional, uses provider default if empty)'
+        required: false
       language:
         description: 'Commit message language'
         default: 'zh'
@@ -30,12 +33,30 @@ on:
         type: boolean
         default: true
 
+permissions:
+  contents: read
+
 jobs:
   rewrite-remote:
     name: Rewrite Remote Repository
     runs-on: ubuntu-latest
     
     steps:
+      - name: Validate inputs
+        run: |
+          if [ -z "${{ secrets.EXTERNAL_REPO_TOKEN }}" ]; then
+            echo "❌ Error: EXTERNAL_REPO_TOKEN secret is not set!"
+            echo "Please add a Personal Access Token with repo permissions to your repository secrets."
+            exit 1
+          fi
+          
+          if [ -z "${{ inputs.target_repo }}" ]; then
+            echo "❌ Error: target_repo is required!"
+            exit 1
+          fi
+          
+          echo "✅ Input validation passed"
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -54,23 +75,45 @@ jobs:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          # Clean input repo string (remove https://github.com/ if present)
-          CLEAN_REPO=$(echo "${{ inputs.target_repo }}" | sed 's|https://github.com/||' | sed 's|.git$||')
+          # Clean input repo string (remove https://github.com/ and .git if present)
+          CLEAN_REPO=$(echo "${{ inputs.target_repo }}" | sed 's|https://github.com/||' | sed 's|.git$||' | sed 's|/$||')
+          
+          echo "📦 Target repository: ${CLEAN_REPO}"
+          echo "🌿 Branch: ${{ inputs.branch }}"
+          echo "📝 Max commits: ${{ inputs.max_commits }}"
+          echo "🤖 Provider: ${{ inputs.provider }}"
+          echo "🌐 Language: ${{ inputs.language }}"
+          echo "🔄 Force rewrite: ${{ inputs.force_rewrite }}"
           
           # Construct secure URL with PAT
-          # Ensure you have EXTERNAL_REPO_TOKEN set in your Repository Secrets
           REPO_URL="https://${{ secrets.EXTERNAL_REPO_TOKEN }}@github.com/${CLEAN_REPO}.git"
           
-          # Prepare arguments
-          ARGS="--repo $REPO_URL --branch ${{ inputs.branch }} --max-commits ${{ inputs.max_commits }} --language ${{ inputs.language }} --push --skip-remote-consent --quiet"
+          # Prepare base arguments
+          ARGS="--repo $REPO_URL"
+          ARGS="$ARGS --branch ${{ inputs.branch }}"
+          ARGS="$ARGS --max-commits ${{ inputs.max_commits }}"
+          ARGS="$ARGS --language ${{ inputs.language }}"
+          ARGS="$ARGS --push"
+          ARGS="$ARGS --skip-remote-consent"
+          ARGS="$ARGS --skip-backup"
           
+          # Add model if specified
+          if [ -n "${{ inputs.model }}" ]; then
+            ARGS="$ARGS --model ${{ inputs.model }}"
+            echo "🧠 Model: ${{ inputs.model }}"
+          fi
+          
+          # Add force rewrite flag
           if [ "${{ inputs.force_rewrite }}" == "true" ]; then
             ARGS="$ARGS --no-skip-well-formed"
           fi
           
+          echo ""
           echo "🚀 Starting rewrite for ${CLEAN_REPO}..."
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           
           # Run via uv
           uv run git-rewrite-commits --provider ${{ inputs.provider }} $ARGS
           
-          echo "✅ Done!"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ Rewrite completed successfully!"

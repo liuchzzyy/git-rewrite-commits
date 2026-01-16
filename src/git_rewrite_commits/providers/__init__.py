@@ -1,12 +1,13 @@
 """AI Provider implementations for commit message generation."""
 
-from .base import AIProvider, ProviderConfig
-from .openai import OpenAIProvider
+from .base import AIProvider, OpenAICompatibleProvider, ProviderConfig
 from .deepseek import DeepSeekProvider
+from .openai import OpenAIProvider
 
 __all__ = [
     "AIProvider",
     "ProviderConfig",
+    "OpenAICompatibleProvider",
     "OpenAIProvider",
     "DeepSeekProvider",
     "create_provider",

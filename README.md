@@ -35,7 +35,7 @@ pip install git-rewrite-commits
 ### From Source
 
 ```bash
-git clone https://github.com/f/git-rewrite-commits.git
+git clone https://github.com/liuchzzyy/git-rewrite-commits.git
 cd git-rewrite-commits
 pip install -e .
 ```
@@ -50,7 +50,7 @@ export OPENAI_API_KEY="your-api-key"
 git-rewrite-commits
 ```
 
-**Option B: DeepSeek (NEW)**
+**Option B: DeepSeek**
 ```bash
 export DEEPSEEK_API_KEY="your-api-key"
 git-rewrite-commits --provider deepseek
@@ -76,8 +76,7 @@ git-rewrite-commits --max-commits 10            # Apply
 Usage: git-rewrite-commits [OPTIONS]
 
 Options:
-  --provider [openai|deepseek]
-                                  AI provider to use
+  --provider [openai|deepseek]    AI provider to use
   -k, --api-key TEXT              API key (defaults to env var)
   -m, --model TEXT                AI model to use
   -b, --branch TEXT               Branch to rewrite
@@ -95,6 +94,8 @@ Options:
   --staged                        Generate for staged changes
   --skip-remote-consent           Skip consent prompt
   --install-hooks                 Install git hooks
+  --repo TEXT                     Target repository (local path or GitHub URL)
+  --push                          Push changes back to remote
   --version                       Show version
   --help                          Show this message
 ```
@@ -151,6 +152,7 @@ on:
         type: choice
         options:
           - deepseek
+          - openai
 
 permissions:
   contents: write
@@ -170,7 +172,6 @@ jobs:
         with:
           provider: ${{ inputs.provider || 'deepseek' }}
           api_key: ${{ secrets.DEEPSEEK_API_KEY }}
-          # For push events, limit to last 10 commits to be safe
           max_commits: ${{ github.event_name == 'push' && '10' || inputs.max_commits }}
           
       - name: Force Push
@@ -184,6 +185,7 @@ jobs:
 
 Go to `Settings > Secrets and variables > Actions` and add:
 - `DEEPSEEK_API_KEY`: If using DeepSeek
+- `OPENAI_API_KEY`: If using OpenAI
 
 ## Providers
 
@@ -192,7 +194,7 @@ Go to `Settings > Secrets and variables > Actions` and add:
 - Models: `gpt-4o-mini` (default), `gpt-4o`, `gpt-3.5-turbo`
 - Requires: `OPENAI_API_KEY` environment variable
 
-### DeepSeek (NEW)
+### DeepSeek
 - OpenAI-compatible API
 - Models: `deepseek-chat` (default), `deepseek-coder`, `deepseek-reasoner`
 - Requires: `DEEPSEEK_API_KEY` environment variable
@@ -202,14 +204,13 @@ Go to `Settings > Secrets and variables > Actions` and add:
 
 When using remote AI providers (OpenAI, DeepSeek), this tool:
 
-✅ **Automatically redacts** API keys, passwords, and tokens
-✅ **Completely hides** .env file contents
-✅ **Removes** private keys and certificates
-✅ **Creates backups** before history rewrites
+✅ **Automatically redacts** API keys, passwords, and tokens  
+✅ **Completely hides** .env file contents  
+✅ **Removes** private keys and certificates  
+✅ **Creates backups** before history rewrites  
 ✅ **Requires consent** before sending data (unless `--skip-remote-consent`)
 
 ## Custom Templates
-
 
 ```bash
 # Conventional commits with scope

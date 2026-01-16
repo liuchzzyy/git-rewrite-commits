@@ -2,24 +2,21 @@
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 import tempfile
-import shutil
-from pathlib import Path
 from dataclasses import dataclass
-
-
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from .git import GitRepo, CommitInfo, GitError
+from .git import GitError, GitRepo
 from .prompts import SYSTEM_PROMPT, build_prompt, find_commit_message_context
-from .providers import create_provider, AIProvider
+from .providers import AIProvider, create_provider
 from .quality import score_commit_message
 from .redaction import redact_sensitive_data
-
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -403,4 +400,4 @@ class GitCommitRewriter:
             raise
 
 
-__all__ = ["GitCommitRewriter", "RewriteOptions", "CommitInfo"]
+__all__ = ["GitCommitRewriter", "RewriteOptions"]

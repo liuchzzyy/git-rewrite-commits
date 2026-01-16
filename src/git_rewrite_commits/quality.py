@@ -1,6 +1,34 @@
 """Commit message quality scoring."""
 
 import re
+from re import Pattern
+
+# Pre-compiled patterns for commit message quality assessment
+_CONVENTIONAL_PATTERN: Pattern[str] = re.compile(
+    r"^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)"
+    r"(\([^)]+\))?: .+"
+)
+
+_PRESENT_TENSE_PATTERN: Pattern[str] = re.compile(
+    r"^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)?"
+    r"(\([^)]+\))?: [a-z]"
+)
+
+# Generic commit messages that should be flagged for improvement
+_GENERIC_MESSAGES = frozenset(
+    [
+        "update",
+        "fix",
+        "change",
+        "modify",
+        "commit",
+        "initial",
+        "test",
+        "wip",
+        "tmp",
+        "temp",
+    ]
+)
 
 
 def score_commit_message(message: str) -> tuple[int, bool, str]:
@@ -18,12 +46,7 @@ def score_commit_message(message: str) -> tuple[int, bool, str]:
     reasons: list[str] = []
 
     # Check for conventional commit format
-    conventional_pattern = re.compile(
-        r"^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)"
-        r"(\([^)]+\))?: .+"
-    )
-
-    if conventional_pattern.match(message):
+    if _CONVENTIONAL_PATTERN.match(message):
         score += 4
         reasons.append("follows conventional format")
 
@@ -38,21 +61,9 @@ def score_commit_message(message: str) -> tuple[int, bool, str]:
         reasons.append("too long")
 
     # Check for descriptive content (not generic)
-    generic_messages = [
-        "update",
-        "fix",
-        "change",
-        "modify",
-        "commit",
-        "initial",
-        "test",
-        "wip",
-        "tmp",
-        "temp",
-    ]
     msg_lower = message.lower().strip(".")
     is_generic = any(
-        msg_lower == generic or msg_lower == f"{generic} commit" for generic in generic_messages
+        msg_lower == generic or msg_lower == f"{generic} commit" for generic in _GENERIC_MESSAGES
     )
 
     if not is_generic:
@@ -63,11 +74,7 @@ def score_commit_message(message: str) -> tuple[int, bool, str]:
 
     # Check for present tense / imperative mood
     # Conventional commits should start lowercase after the type
-    present_tense_pattern = re.compile(
-        r"^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)?"
-        r"(\([^)]+\))?: [a-z]"
-    )
-    if present_tense_pattern.match(message):
+    if _PRESENT_TENSE_PATTERN.match(message):
         score += 1
         reasons.append("uses present tense")
 

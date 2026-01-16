@@ -1,5 +1,8 @@
 """Prompt templates and language support for commit message generation."""
 
+import re
+from pathlib import Path
+
 # System prompt for the AI
 SYSTEM_PROMPT = (
     "You are a helpful assistant that generates clear, conventional git commit messages."
@@ -54,8 +57,6 @@ def parse_template(template: str) -> dict[str, str]:
     Returns:
         Dict with 'prefix', 'separator', 'example' keys
     """
-    import re
-
     match = re.match(r"^(.*?)(\s*[:\-]\s*)(.*)$", template)
     if match:
         return {
@@ -177,8 +178,6 @@ def find_commit_message_context(repo_path: str | None = None) -> str | None:
     Returns:
         Content of the context file if found, None otherwise
     """
-    from pathlib import Path
-
     base = Path(repo_path) if repo_path else Path.cwd()
 
     search_paths = [
@@ -191,7 +190,7 @@ def find_commit_message_context(repo_path: str | None = None) -> str | None:
         try:
             if path.exists():
                 return path.read_text(encoding="utf-8").strip()
-        except (OSError, IOError):
+        except OSError:
             continue
 
     return None
