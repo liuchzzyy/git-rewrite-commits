@@ -2,14 +2,12 @@
 
 from .base import AIProvider, ProviderConfig
 from .openai import OpenAIProvider
-from .ollama import OllamaProvider
 from .deepseek import DeepSeekProvider
 
 __all__ = [
     "AIProvider",
     "ProviderConfig",
     "OpenAIProvider",
-    "OllamaProvider",
     "DeepSeekProvider",
     "create_provider",
 ]
@@ -24,10 +22,10 @@ def create_provider(
     """Factory function to create an AI provider instance.
 
     Args:
-        provider: Provider name - 'openai', 'ollama', or 'deepseek'
+        provider: Provider name - 'openai' or 'deepseek'
         api_key: API key for the provider (required for openai/deepseek)
         model: Model name to use (provider-specific defaults if not set)
-        base_url: Base URL for the API (used for ollama, optional for others)
+        base_url: Base URL for the API (optional)
 
     Returns:
         An AIProvider instance
@@ -37,12 +35,7 @@ def create_provider(
     """
     provider = provider.lower()
 
-    if provider == "ollama":
-        return OllamaProvider(
-            model=model or "llama3.2",
-            base_url=base_url or "http://localhost:11434",
-        )
-    elif provider == "deepseek":
+    if provider == "deepseek":
         return DeepSeekProvider(
             api_key=api_key,
             model=model or "deepseek-chat",
@@ -53,6 +46,4 @@ def create_provider(
             model=model or "gpt-4o-mini",
         )
     else:
-        raise ValueError(
-            f"Unknown provider: {provider}. Supported providers: openai, ollama, deepseek"
-        )
+        raise ValueError(f"Unknown provider: {provider}. Supported providers: openai, deepseek")

@@ -123,14 +123,8 @@ def install_hooks() -> None:
             console.print('[dim]   export DEEPSEEK_API_KEY="your-api-key"[/]')
         console.print("[dim]   git config hooks.commitProvider deepseek[/]")
 
-        console.print(
-            "\n[dim]   # Option C: Ollama (local processing - recommended for privacy)[/]"
-        )
-        console.print("[dim]   ollama pull llama3.2[/]")
-        console.print("[dim]   ollama serve[/]")
-        console.print("[dim]   git config hooks.commitProvider ollama[/]")
-
         console.print("\n3. Optional customizations:")
+
         console.print('[dim]   git config hooks.commitTemplate "type(scope): message"[/]')
         console.print('[dim]   git config hooks.commitLanguage "en"[/]')
 
@@ -262,9 +256,9 @@ python -m git_rewrite_commits --staged --quiet --provider "$PROVIDER" --language
 @click.command()
 @click.option(
     "--provider",
-    type=click.Choice(["openai", "ollama", "deepseek"]),
+    type=click.Choice(["openai", "deepseek"]),
     default="openai",
-    help='AI provider to use: "openai", "ollama", or "deepseek"',
+    help='AI provider to use: "openai" or "deepseek"',
 )
 @click.option(
     "-k",
@@ -275,11 +269,6 @@ python -m git_rewrite_commits --staged --quiet --provider "$PROVIDER" --language
     "-m",
     "--model",
     help="AI model to use (default varies by provider)",
-)
-@click.option(
-    "--ollama-url",
-    default="http://localhost:11434",
-    help="Ollama server URL",
 )
 @click.option(
     "-b",
@@ -370,7 +359,6 @@ def main(
     provider: str,
     api_key: str | None,
     model: str | None,
-    ollama_url: str,
     branch: str | None,
     dry_run: bool,
     verbose: bool,
@@ -388,7 +376,7 @@ def main(
     repo: str | None,
     push: bool,
 ) -> None:
-    """AI-powered git commit message rewriter using OpenAI, DeepSeek, or Ollama.
+    """AI-powered git commit message rewriter using OpenAI or DeepSeek.
 
     \b
     Examples:
@@ -400,9 +388,6 @@ def main(
 
       # Use DeepSeek instead of OpenAI
       git-rewrite-commits --provider deepseek
-
-      # Use local Ollama
-      git-rewrite-commits --provider ollama --model llama3.2
 
       # Process only the last 10 commits
       git-rewrite-commits --max-commits 10
@@ -420,10 +405,7 @@ def main(
             return
 
         # Show provider info
-        if provider == "ollama" and not quiet:
-            console.print(f"[blue]ℹ️  Using Ollama provider at {ollama_url}[/]")
-            console.print("[dim]   Make sure Ollama is running: ollama serve[/]")
-        elif provider == "deepseek" and not quiet:
+        if provider == "deepseek" and not quiet:
             console.print("[blue]ℹ️  Using DeepSeek provider[/]")
             console.print("[dim]   Make sure DEEPSEEK_API_KEY is set[/]")
 
@@ -431,7 +413,6 @@ def main(
             provider=provider,
             api_key=api_key,
             model=model,
-            ollama_url=ollama_url,
             branch=branch,
             dry_run=dry_run,
             verbose=verbose,
