@@ -25,13 +25,6 @@ on:
         description: 'Language (en, zh, etc.)'
         required: false
         default: 'zh'
-  push:
-    branches:
-      - master
-      - main
-    paths-ignore:
-      - '.github/workflows/**'
-      - 'README.md'
 
 permissions:
   contents: write
@@ -40,7 +33,7 @@ jobs:
   rewrite:
     name: Rewrite Commit History
     runs-on: ubuntu-latest
-    if: (github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[skip-rewrite]')) && github.actor != 'github-actions[bot]'
+    if: github.actor != 'github-actions[bot]'
     
     steps:
       - name: Checkout repository
@@ -84,11 +77,6 @@ jobs:
           PROVIDER="${{ inputs.provider }}"
           if [ -z "$PROVIDER" ]; then PROVIDER="deepseek"; fi
 
-          # For push events, limit scope and force rewrite to ensure translation/formatting
-          if [ "${{ github.event_name }}" == "push" ]; then
-             ARGS="$ARGS --max-commits 10 --no-skip-well-formed"
-          fi
-          
           echo "Running: uv run git-rewrite-commits --provider $PROVIDER $ARGS"
           
           # Run the rewriter using uv
