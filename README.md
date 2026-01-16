@@ -129,6 +129,73 @@ git config hooks.prepareCommitMsg true
 git config hooks.commitProvider deepseek  # or openai, ollama
 ```
 
+## 🤖 GitHub Actions
+
+You can use git-rewrite-commits directly in your GitHub Workflows to automatically rewrite commits on push or manually trigger a history rewrite.
+
+### Usage
+
+Create `.github/workflows/rewrite-commits.yml` in your repository:
+
+```yaml
+name: AI Commit Rewriter
+
+on:
+  # Trigger on push to main branch
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '.github/workflows/**'
+  
+  # Allow manual trigger to rewrite history
+  workflow_dispatch:
+    inputs:
+      max_commits:
+        description: 'Number of commits to rewrite'
+        default: '10'
+      provider:
+        description: 'AI Provider'
+        default: 'openai'
+        type: choice
+        options:
+          - openai
+          - deepseek
+
+permissions:
+  contents: write
+
+jobs:
+  rewrite:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip-rewrite]')"
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Rewrite Commits
+        uses: f/git-rewrite-commits@main
+        with:
+          provider: ${{ inputs.provider || 'openai' }}
+          api_key: ${{ secrets.OPENAI_API_KEY }}
+          # For push events, limit to last 10 commits to be safe
+          max_commits: ${{ github.event_name == 'push' && '10' || inputs.max_commits }}
+          
+      - name: Force Push
+        run: |
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/${{ github.ref_name }})" ]; then
+            git push origin HEAD:${{ github.ref }} --force
+          fi
+```
+
+### Secrets
+
+Go to `Settings > Secrets and variables > Actions` and add:
+- `OPENAI_API_KEY`: If using OpenAI
+- `DEEPSEEK_API_KEY`: If using DeepSeek
+
 ## Providers
 
 ### OpenAI
