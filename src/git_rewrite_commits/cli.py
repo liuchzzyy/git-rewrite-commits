@@ -269,7 +269,6 @@ python -m git_rewrite_commits --staged --quiet --provider "$PROVIDER" --language
 @click.option(
     "-k",
     "--api-key",
-    envvar=["OPENAI_API_KEY", "DEEPSEEK_API_KEY"],
     help="API key (defaults to OPENAI_API_KEY or DEEPSEEK_API_KEY env var)",
 )
 @click.option(
