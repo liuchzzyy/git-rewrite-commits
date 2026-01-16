@@ -2,6 +2,8 @@
 
 AI-powered git commit message rewriter using OpenAI, DeepSeek, or Ollama.
 
+> 🐍 Python port of [f/git-rewrite-commits](https://github.com/f/git-rewrite-commits) with added DeepSeek support.
+
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -128,71 +130,6 @@ git config hooks.prepareCommitMsg true
 # Set your provider
 git config hooks.commitProvider deepseek  # or openai, ollama
 ```
-
-## 🤖 GitHub Actions
-
-You can use git-rewrite-commits directly in your GitHub Workflows to automatically rewrite commits on push or manually trigger a history rewrite.
-
-### Usage
-
-Create `.github/workflows/rewrite-commits.yml` in your repository:
-
-```yaml
-name: AI Commit Rewriter
-
-on:
-  # Trigger on push to main branch
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - '.github/workflows/**'
-  
-  # Allow manual trigger to rewrite history
-  workflow_dispatch:
-    inputs:
-      max_commits:
-        description: 'Number of commits to rewrite'
-        default: '10'
-      provider:
-        description: 'AI Provider'
-        default: 'deepseek'
-        type: choice
-        options:
-          - deepseek
-
-permissions:
-  contents: write
-
-jobs:
-  rewrite:
-    runs-on: ubuntu-latest
-    if: "!contains(github.event.head_commit.message, '[skip-rewrite]')"
-    
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      
-      - name: Rewrite Commits
-        uses: liuchzzyy/git-rewrite-commits@master
-        with:
-          provider: ${{ inputs.provider || 'deepseek' }}
-          api_key: ${{ secrets.DEEPSEEK_API_KEY }}
-          # For push events, limit to last 10 commits to be safe
-          max_commits: ${{ github.event_name == 'push' && '10' || inputs.max_commits }}
-          
-      - name: Force Push
-        run: |
-          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/${{ github.ref_name }})" ]; then
-            git push origin HEAD:${{ github.ref }} --force
-          fi
-```
-
-### Secrets
-
-Go to `Settings > Secrets and variables > Actions` and add:
-- `DEEPSEEK_API_KEY`: If using DeepSeek
 
 ## Providers
 
