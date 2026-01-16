@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "git-rewrite-commits"
-version = "1.0.0"
+version = "1.0.1"
 description = "AI-powered git commit message rewriter using OpenAI or DeepSeek"
 readme = "README.md"
 license = "MIT"
