@@ -156,10 +156,9 @@ on:
         default: '10'
       provider:
         description: 'AI Provider'
-        default: 'openai'
+        default: 'deepseek'
         type: choice
         options:
-          - openai
           - deepseek
 
 permissions:
@@ -178,8 +177,8 @@ jobs:
       - name: Rewrite Commits
         uses: f/git-rewrite-commits@main
         with:
-          provider: ${{ inputs.provider || 'openai' }}
-          api_key: ${{ secrets.OPENAI_API_KEY }}
+          provider: ${{ inputs.provider || 'deepseek' }}
+          api_key: ${{ secrets.DEEPSEEK_API_KEY }}
           # For push events, limit to last 10 commits to be safe
           max_commits: ${{ github.event_name == 'push' && '10' || inputs.max_commits }}
           
@@ -193,7 +192,6 @@ jobs:
 ### Secrets
 
 Go to `Settings > Secrets and variables > Actions` and add:
-- `OPENAI_API_KEY`: If using OpenAI
 - `DEEPSEEK_API_KEY`: If using DeepSeek
 
 ## Providers
