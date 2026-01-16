@@ -36,6 +36,11 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
@@ -44,9 +49,12 @@ jobs:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
+          # Clean input repo string (remove https://github.com/ if present)
+          CLEAN_REPO=$(echo "${{ inputs.target_repo }}" | sed 's|https://github.com/||' | sed 's|.git$||')
+          
           # Construct secure URL with PAT
           # Ensure you have EXTERNAL_REPO_TOKEN set in your Repository Secrets
-          REPO_URL="https://${{ secrets.EXTERNAL_REPO_TOKEN }}@github.com/${{ inputs.target_repo }}.git"
+          REPO_URL="https://${{ secrets.EXTERNAL_REPO_TOKEN }}@github.com/${CLEAN_REPO}.git"
           
           # Prepare arguments
           ARGS="--repo $REPO_URL --branch ${{ inputs.branch }} --max-commits ${{ inputs.max_commits }} --language ${{ inputs.language }} --push --skip-remote-consent --quiet"
@@ -55,7 +63,7 @@ jobs:
             ARGS="$ARGS --no-skip-well-formed"
           fi
           
-          echo "🚀 Starting rewrite for ${{ inputs.target_repo }}..."
+          echo "🚀 Starting rewrite for ${CLEAN_REPO}..."
           
           # Run via uv
           uv run git-rewrite-commits --provider ${{ inputs.provider }} $ARGS
