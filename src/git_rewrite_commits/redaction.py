@@ -130,4 +130,18 @@ def redact_sensitive_data(text: str) -> str:
         redacted,
     )
 
+    # Redact Google Cloud API keys
+    redacted = re.sub(
+        r"AIza[0-9A-Za-z\\-_]{35}",
+        "[REDACTED_GOOGLE_CLOUD_KEY]",
+        redacted,
+    )
+
+    # Redact Firebase API keys
+    redacted = re.sub(
+        r"AIza[0-9A-Za-z\\-_]{35}",
+        "[REDACTED_FIREBASE_KEY]",
+        redacted,
+    )
+
     return redacted

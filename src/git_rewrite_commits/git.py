@@ -191,80 +191,50 @@ class GitRepo:
     def rewrite_history(self, messages: list[str]) -> None:
         """Rewrite commit history with new messages.
 
-        Uses git filter-branch with a Python script to replace messages.
-
         Args:
             messages: Ordered list of new messages (oldest commit first)
         """
-        import json
-        import os
-        import stat
-
-        git_dir = self.path / ".git"
-
-        # Create temporary files for the mapping and counter
-        mapping_file = git_dir / "commit-message-map.json"
-        counter_file = git_dir / "commit-counter.txt"
-        filter_script = git_dir / "filter-msg.py"
-
-        try:
-            # Write the ordered messages
-            mapping_file.write_text(json.dumps(messages), encoding="utf-8")
-            counter_file.write_text("0", encoding="utf-8")
-
-            # Create the filter script
-            # Escape paths for use in script
-            escaped_mapping = str(mapping_file).replace("\\", "/")
-            escaped_counter = str(counter_file).replace("\\", "/")
-
-            script_content = f'''#!/usr/bin/env python3
-import json
-import sys
-
-# Read the ordered messages array
-with open("{escaped_mapping}", "r", encoding="utf-8") as f:
-    messages = json.load(f)
-
-# Read and update the counter
-with open("{escaped_counter}", "r", encoding="utf-8") as f:
-    counter = int(f.read().strip())
-
-new_message = messages[counter] if counter < len(messages) else None
-
-with open("{escaped_counter}", "w", encoding="utf-8") as f:
-    f.write(str(counter + 1))
-
-# Read old message from stdin (need to consume it)
-old_message = sys.stdin.read().strip()
-
-# Output the new message
-if new_message:
-    print(new_message)
-else:
-    print(old_message)
-'''
-
-            filter_script.write_text(script_content, encoding="utf-8")
-
-            # Make executable on Unix
-            if os.name != "nt":
-                filter_script.chmod(filter_script.stat().st_mode | stat.S_IEXEC)
-
-            # Run filter-branch
-            script_path = str(filter_script).replace("\\", "/")
-            self._run(
-                "filter-branch",
-                "-f",
-                "--msg-filter",
-                f'python "{script_path}"',
-                "HEAD",
+        commits = self.get_commits()
+        if len(messages) != len(commits):
+            raise GitError(
+                f"Message count ({len(messages)}) does not match commit count ({len(commits)})"
             )
 
-        finally:
-            # Clean up temporary files
-            for f in [mapping_file, counter_file, filter_script]:
-                if f.exists():
-                    f.unlink()
+        # Get the parent of the first commit to be rewritten
+        # If it's the root commit, parent is None
+        first_commit = commits[0]
+        try:
+            parent_result = self._run("rev-parse", f"{first_commit}^")
+            new_parent = parent_result.stdout.strip()
+        except GitError:
+            new_parent = None
+
+        # Rewrite each commit
+        for commit_hash, new_message in zip(commits, messages):
+            # Get the tree of the original commit
+            tree_result = self._run("rev-parse", f"{commit_hash}^{{tree}}")
+            tree_hash = tree_result.stdout.strip()
+
+            # Build the commit-tree command
+            cmd_args = ["commit-tree", tree_hash]
+            if new_parent:
+                cmd_args.extend(["-p", new_parent])
+
+            # Run commit-tree and provide message via stdin
+            process = subprocess.run(
+                ["git", *cmd_args],
+                cwd=self.path,
+                input=new_message,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                check=True,
+            )
+            new_parent = process.stdout.strip()
+
+        # Update HEAD to the new tip
+        if new_parent:
+            self._run("reset", "--hard", new_parent)
 
     def install_hook(self, hook_name: str, content: str) -> Path:
         """Install a git hook.
