@@ -25,6 +25,13 @@ inputs:
     description: 'Language code (en, zh, es, etc.)'
     required: false
     default: 'en'
+  repo:
+    description: 'Target repository (local path or GitHub URL)'
+    required: false
+  push:
+    description: 'Push changes back to remote'
+    required: false
+    default: 'false'
 runs:
   using: "composite"
   steps:
@@ -52,6 +59,8 @@ runs:
         if [ -n "${{ inputs.branch }}" ]; then ARGS="$ARGS --branch ${{ inputs.branch }}"; fi
         if [ -n "${{ inputs.template }}" ]; then ARGS="$ARGS --template '${{ inputs.template }}'"; fi
         if [ -n "${{ inputs.language }}" ]; then ARGS="$ARGS --language ${{ inputs.language }}"; fi
+        if [ -n "${{ inputs.repo }}" ]; then ARGS="$ARGS --repo ${{ inputs.repo }}"; fi
+        if [ "${{ inputs.push }}" == "true" ]; then ARGS="$ARGS --push"; fi
         
         export OPENAI_API_KEY="${{ inputs.api_key }}"
         export DEEPSEEK_API_KEY="${{ inputs.api_key }}"

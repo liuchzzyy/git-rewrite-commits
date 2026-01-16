@@ -101,6 +101,14 @@ class GitRepo:
         result = self._run("rev-parse", "--abbrev-ref", "HEAD")
         return result.stdout.strip()
 
+    def checkout(self, branch_name: str, create: bool = False) -> None:
+        """Checkout a branch."""
+        args = ["checkout"]
+        if create:
+            args.append("-b")
+        args.append(branch_name)
+        self._run(*args)
+
     def get_commits(self, max_commits: int | None = None) -> list[str]:
         """Get commit hashes in reverse chronological order.
 

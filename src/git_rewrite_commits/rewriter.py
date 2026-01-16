@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import subprocess
+import tempfile
+import shutil
 from dataclasses import dataclass
+
 from typing import TYPE_CHECKING
 
 from rich.console import Console
@@ -39,6 +43,8 @@ class RewriteOptions:
     language: str = "en"
     prompt: str | None = None
     skip_remote_consent: bool = False
+    repo: str | None = None
+    push: bool = False
 
 
 class GitCommitRewriter:
@@ -56,13 +62,52 @@ class GitCommitRewriter:
             repo_path: Path to the git repository (defaults to cwd)
         """
         self.options = options or RewriteOptions()
-        self.repo = GitRepo(repo_path)
         self.console = Console(quiet=self.options.quiet)
         self._provider: AIProvider | None = None
+        self._temp_dir: str | None = None
+
+        # Handle remote repository or specific path
+        target_path = repo_path
+        if self.options.repo:
+            if self.options.repo.startswith(("http://", "https://", "git@")):
+                # Remote repository - clone it
+                target_path = self._clone_repo(self.options.repo)
+            else:
+                # Local path
+                target_path = Path(self.options.repo).resolve()
+
+        self.repo = GitRepo(target_path)
 
         # Statistics
         self._skipped_count = 0
         self._improved_count = 0
+
+    def _clone_repo(self, repo_url: str) -> Path:
+        """Clone a remote repository to a temporary directory."""
+        if not self.options.quiet:
+            self.console.print(f"[blue]Cloning repository: {repo_url}[/]")
+
+        self._temp_dir = tempfile.mkdtemp(prefix="git-rewrite-")
+        try:
+            subprocess.run(
+                ["git", "clone", repo_url, self._temp_dir],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            return Path(self._temp_dir)
+        except subprocess.CalledProcessError as e:
+            shutil.rmtree(self._temp_dir)
+            self._temp_dir = None
+            raise GitError(f"Failed to clone repository {repo_url}: {e.stderr}")
+
+    def __del__(self) -> None:
+        """Clean up temporary directory."""
+        if hasattr(self, "_temp_dir") and self._temp_dir:
+            try:
+                shutil.rmtree(self._temp_dir)
+            except Exception:
+                pass
 
     def _get_provider(self) -> AIProvider:
         """Lazily create and return the AI provider."""
@@ -260,6 +305,17 @@ class GitCommitRewriter:
             self.console.print("\n[bold cyan]🚀 git-rewrite-commits[/]\n")
 
         self.repo.check_repository()
+
+        # Checkout target branch if specified
+        if self.options.branch:
+            try:
+                self.repo.checkout(self.options.branch)
+            except GitError:
+                if not self.options.quiet:
+                    self.console.print(
+                        f"[yellow]Branch '{self.options.branch}' not found. Staying on current branch.[/]"
+                    )
+
         current_branch = self.repo.get_current_branch()
 
         if not self.options.quiet:
@@ -333,6 +389,20 @@ class GitCommitRewriter:
             self.repo.rewrite_history(ordered_messages, self.options.max_commits)
             if not self.options.quiet:
                 self.console.print("\n[bold green]✅ Successfully rewrote git history![/]")
+
+            # Push back to remote if requested
+            if self.options.push:
+                if not self.options.quiet:
+                    self.console.print("[blue]Pushing changes to remote...[/]")
+
+                branch = self.options.branch or self.repo.get_current_branch()
+                try:
+                    self.repo._run("push", "origin", f"HEAD:{branch}", "--force")
+                    if not self.options.quiet:
+                        self.console.print(f"[green]✅ Successfully pushed to origin/{branch}[/]")
+                except GitError as e:
+                    self.console.print(f"[red]❌ Failed to push to remote: {e}[/]")
+                    raise
         except Exception as e:
             self.console.print(f"\n[red]❌ Error: {e}[/]")
             if backup_branch:

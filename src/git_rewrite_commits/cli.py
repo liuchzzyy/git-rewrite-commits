@@ -356,6 +356,15 @@ python -m git_rewrite_commits --staged --quiet --provider "$PROVIDER" --language
     is_flag=True,
     help="Install AI commit message hooks (pre-commit and prepare-commit-msg)",
 )
+@click.option(
+    "--repo",
+    help="Target repository (local path or GitHub URL)",
+)
+@click.option(
+    "--push",
+    is_flag=True,
+    help="Push changes back to remote after rewrite",
+)
 @click.version_option(__version__)
 def main(
     provider: str,
@@ -376,6 +385,8 @@ def main(
     staged: bool,
     skip_remote_consent: bool,
     install_hooks: bool,
+    repo: str | None,
+    push: bool,
 ) -> None:
     """AI-powered git commit message rewriter using OpenAI, DeepSeek, or Ollama.
 
@@ -433,6 +444,8 @@ def main(
             language=language,
             prompt=prompt,
             skip_remote_consent=skip_remote_consent,
+            repo=repo,
+            push=push,
         )
 
         rewriter = GitCommitRewriter(options)
