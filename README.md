@@ -175,7 +175,7 @@ jobs:
           fetch-depth: 0
       
       - name: Rewrite Commits
-        uses: f/git-rewrite-commits@main
+        uses: liuchzzyy/git-rewrite-commits@master
         with:
           provider: ${{ inputs.provider || 'deepseek' }}
           api_key: ${{ secrets.DEEPSEEK_API_KEY }}
