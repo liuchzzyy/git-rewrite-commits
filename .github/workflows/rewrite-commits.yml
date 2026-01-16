@@ -10,18 +10,18 @@ on:
       provider:
         description: 'AI Provider'
         required: true
-        default: 'openai'
+        default: 'deepseek'
         type: choice
         options:
-          - openai
           - deepseek
+          - ollama
       model:
         description: 'AI Model (optional)'
         required: false
       language:
         description: 'Language (en, zh, etc.)'
         required: false
-        default: 'en'
+        default: 'zh'
   push:
     branches:
       - master
@@ -62,7 +62,6 @@ jobs:
 
       - name: Rewrite Commits
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         run: |
           # Define base arguments
@@ -82,7 +81,7 @@ jobs:
           ARGS="$ARGS --language $LANGUAGE"
           
           PROVIDER="${{ inputs.provider }}"
-          if [ -z "$PROVIDER" ]; then PROVIDER="openai"; fi
+          if [ -z "$PROVIDER" ]; then PROVIDER="deepseek"; fi
 
           # For push events, limit scope to prevent deep history rewrites on every push
           # But user wants "every new submission... rewrite record"
