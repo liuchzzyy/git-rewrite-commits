@@ -188,14 +188,13 @@ class GitRepo:
         """Delete a branch."""
         self._run("branch", "-D", branch_name)
 
-    def rewrite_history(self, messages: list[str], max_commits: int | None = None) -> None:
+    def rewrite_history(self, messages: list[str]) -> None:
         """Rewrite commit history with new messages.
 
         Args:
             messages: Ordered list of new messages (oldest commit first)
-            max_commits: Maximum number of commits to process
         """
-        commits = self.get_commits(max_commits)
+        commits = self.get_commits()
         if len(messages) != len(commits):
             raise GitError(
                 f"Message count ({len(messages)}) does not match commit count ({len(commits)})"
