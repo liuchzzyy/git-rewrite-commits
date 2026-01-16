@@ -1,0 +1,63 @@
+name: Rewrite Remote Repo
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_repo:
+        description: 'Target repository path (e.g., owner/repo)'
+        required: true
+      branch:
+        description: 'Target branch to rewrite'
+        default: 'master'
+        required: true
+      max_commits:
+        description: 'Number of recent commits to rewrite'
+        default: '10'
+        required: true
+      provider:
+        description: 'AI Provider'
+        default: 'deepseek'
+        type: choice
+        options:
+          - deepseek
+          - openai
+      language:
+        description: 'Commit message language'
+        default: 'zh'
+        required: true
+      force_rewrite:
+        description: 'Rewrite even well-formed commits'
+        type: boolean
+        default: true
+
+jobs:
+  rewrite-remote:
+    name: Rewrite Remote Repository
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Execute Rewrite
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          # Construct secure URL with PAT
+          # Ensure you have EXTERNAL_REPO_TOKEN set in your Repository Secrets
+          REPO_URL="https://${{ secrets.EXTERNAL_REPO_TOKEN }}@github.com/${{ inputs.target_repo }}.git"
+          
+          # Prepare arguments
+          ARGS="--repo $REPO_URL --branch ${{ inputs.branch }} --max-commits ${{ inputs.max_commits }} --language ${{ inputs.language }} --push --skip-remote-consent --quiet"
+          
+          if [ "${{ inputs.force_rewrite }}" == "true" ]; then
+            ARGS="$ARGS --no-skip-well-formed"
+          fi
+          
+          echo "🚀 Starting rewrite for ${{ inputs.target_repo }}..."
+          
+          # Run via uv
+          uv run git-rewrite-commits --provider ${{ inputs.provider }} $ARGS
+          
+          echo "✅ Done!"
