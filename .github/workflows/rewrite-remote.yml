@@ -96,6 +96,7 @@ jobs:
           ARGS="$ARGS --push"
           ARGS="$ARGS --skip-remote-consent"
           ARGS="$ARGS --skip-backup"
+          ARGS="$ARGS --quiet"
           
           # Add model if specified
           if [ -n "${{ inputs.model }}" ]; then
