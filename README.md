@@ -1,6 +1,6 @@
 # git-rewrite-commits
 
-AI-powered git commit message rewriter using OpenAI, DeepSeek, or Ollama.
+AI-powered git commit message rewriter using OpenAI or DeepSeek.
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -13,12 +13,11 @@ Messy commit histories like "fix", "update", "wip" make it hard to understand pr
 
 ## ✨ Features
 
-- **AI-powered commit message generation** using OpenAI, DeepSeek, or local Ollama models
+- **AI-powered commit message generation** using OpenAI or DeepSeek
 - **Blazing fast history rewrite** using native git tree operations (no more slow `filter-branch`)
 - **Conventional commits** format (feat, fix, chore, etc.) strictly enforced
 - **Multi-language support** - generate commits in any language
 - **Smart filtering** - skip already well-formed commits to save API costs
-- **Local AI option** with Ollama - 100% privacy, no data leaves your machine
 - **Git hooks integration** - automatic AI messages on every commit
 - **Intelligent analysis** of code changes to generate meaningful messages
 - **Safe operation** with automatic backup branches
@@ -57,13 +56,6 @@ export DEEPSEEK_API_KEY="your-api-key"
 git-rewrite-commits --provider deepseek
 ```
 
-**Option C: Ollama (local, privacy-friendly)**
-```bash
-ollama pull llama3.2
-ollama serve
-git-rewrite-commits --provider ollama
-```
-
 ### Generate commit message for staged changes
 
 ```bash
@@ -84,11 +76,10 @@ git-rewrite-commits --max-commits 10            # Apply
 Usage: git-rewrite-commits [OPTIONS]
 
 Options:
-  --provider [openai|ollama|deepseek]
+  --provider [openai|deepseek]
                                   AI provider to use
   -k, --api-key TEXT              API key (defaults to env var)
   -m, --model TEXT                AI model to use
-  --ollama-url TEXT               Ollama server URL
   -b, --branch TEXT               Branch to rewrite
   -d, --dry-run                   Preview changes without applying
   -v, --verbose                   Show detailed output
@@ -126,7 +117,7 @@ git config hooks.preCommitPreview true
 git config hooks.prepareCommitMsg true
 
 # Set your provider
-git config hooks.commitProvider deepseek  # or openai, ollama
+git config hooks.commitProvider deepseek  # or openai
 ```
 
 ## 🤖 GitHub Actions
@@ -207,11 +198,6 @@ Go to `Settings > Secrets and variables > Actions` and add:
 - Requires: `DEEPSEEK_API_KEY` environment variable
 - Website: https://platform.deepseek.com/
 
-### Ollama
-- Local processing - no data sent externally
-- Models: `llama3.2` (default), any model you have pulled
-- Requires: Ollama running locally (`ollama serve`)
-
 ## Security & Privacy
 
 When using remote AI providers (OpenAI, DeepSeek), this tool:
@@ -222,12 +208,8 @@ When using remote AI providers (OpenAI, DeepSeek), this tool:
 ✅ **Creates backups** before history rewrites
 ✅ **Requires consent** before sending data (unless `--skip-remote-consent`)
 
-For maximum privacy, use Ollama:
-```bash
-git config hooks.commitProvider ollama
-```
-
 ## Custom Templates
+
 
 ```bash
 # Conventional commits with scope

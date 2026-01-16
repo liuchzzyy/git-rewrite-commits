@@ -30,8 +30,8 @@ class RewriteOptions:
     provider: str = "openai"
     api_key: str | None = None
     model: str | None = None
-    ollama_url: str = "http://localhost:11434"
     branch: str | None = None
+
     dry_run: bool = False
     verbose: bool = False
     quiet: bool = False
@@ -112,15 +112,10 @@ class GitCommitRewriter:
     def _get_provider(self) -> AIProvider:
         """Lazily create and return the AI provider."""
         if self._provider is None:
-            base_url = None
-            if self.options.provider == "ollama":
-                base_url = self.options.ollama_url
-
             self._provider = create_provider(
                 provider=self.options.provider,
                 api_key=self.options.api_key,
                 model=self.options.model,
-                base_url=base_url,
             )
         return self._provider
 
@@ -128,12 +123,8 @@ class GitCommitRewriter:
         """Check if user consents to sending data to remote API.
 
         Returns:
-            True if user consents (or using local provider)
+            True if user consents
         """
-        # Local Ollama doesn't need consent
-        if self.options.provider == "ollama":
-            return True
-
         # Skip if explicitly disabled
         if self.options.skip_remote_consent:
             return True
